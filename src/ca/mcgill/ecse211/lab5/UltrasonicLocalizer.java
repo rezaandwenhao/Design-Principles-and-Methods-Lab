@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.lab4;
+package ca.mcgill.ecse211.lab5;
 
 import lejos.hardware.Sound;
 import lejos.robotics.SampleProvider;

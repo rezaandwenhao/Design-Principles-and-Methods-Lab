@@ -1,5 +1,5 @@
-// Lab3.java
-package ca.mcgill.ecse211.lab4;
+// Lab5.java
+package ca.mcgill.ecse211.lab5;
 
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
@@ -13,11 +13,11 @@ import lejos.robotics.SampleProvider;
 import lejos.robotics.filter.MeanFilter;
 
 /**
- * Main Class for Lab 4 Localizer Lab - ECSE 211 Fall 2018
+ * Main Class for Lab 5 - ECSE 211 Fall 2018
  * @author Eliott Bourachot
  *
  */
-public class Lab4 {
+public class Lab5 {
 
   // Motor Objects, and Robot related parameters
   private static final EV3LargeRegulatedMotor leftMotor =
