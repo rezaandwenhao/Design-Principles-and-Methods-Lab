@@ -20,9 +20,9 @@ import lejos.robotics.filter.MeanFilter;
 public class Lab5 {
 
   // Motor Objects, and Robot related parameters
-  private static final EV3LargeRegulatedMotor leftMotor =
+  static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-  private static final EV3LargeRegulatedMotor rightMotor =
+  static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   private static final Port usPort = LocalEV3.get().getPort("S1");
   private static final Port lightPort = LocalEV3.get().getPort("S2");
