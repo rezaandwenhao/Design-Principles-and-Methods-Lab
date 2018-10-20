@@ -1,6 +1,8 @@
 // Lab5.java
 package ca.mcgill.ecse211.lab5;
 
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
@@ -26,6 +28,7 @@ public class Lab5 {
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   private static final Port usPort = LocalEV3.get().getPort("S1");
   private static final Port lightPort = LocalEV3.get().getPort("S2");
+  private static final Port colorPort = LocalEV3.get().getPort("S3"); 
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final double WHEEL_RAD = 2.13; // (cm) measured with caliper
   public static double TRACK = 9.0; // (cm) measured with caliper
@@ -62,9 +65,9 @@ public class Lab5 {
     final int buttonChoice2 = buttonChoice;
 
     // Display Thread
-    Display odometryDisplay = new Display(lcd); // No need to change
-    Thread odoDisplayThread = new Thread(odometryDisplay);
-	odoDisplayThread.start();
+    Display generalDisplay = new Display(lcd); // No need to change
+    Thread displayThread = new Thread(generalDisplay);
+    displayThread.start();
     
 	// Ultrasonic Sensor Thread
   	(new Thread() {
@@ -87,9 +90,51 @@ public class Lab5 {
     float[] lightData = new float[lightMean.sampleSize()]; // usData is the buffer in which data are returned
     
     // Light Localizer Thread
-    LightLocalizer ll = new LightLocalizer(nav, odometer, lightMean, lightData);
-    Thread llThread = new Thread(ll);
-    llThread.run();
+    ColorSensorLocalization csl = new ColorSensorLocalization(nav, odometer, lightMean, lightData);
+    csl.start();
+    
+    while (Button.waitForAnyPress() != Button.ID_ENTER);
+
+ // Initializing Color Sensor and runs it in this thread
+   	@SuppressWarnings("resource") // Because we don't bother to close this resource
+   	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
+   	SampleProvider colorSample = colorSensor.getMode("RGB"); // init RGB mode
+   	SampleProvider colorMean = new MeanFilter(colorSample, 5); // use a mean filter to reduce fluctuations
+    float[] colorData = new float[colorMean.sampleSize()]; // usData is the buffer in which data are returned
+     
+    // Color Classifier Thread
+    ColorClassifier cc = new ColorClassifier(colorMean, colorData);
+    cc.start();
+    
+//    int[] settings = {0,0,0,0,0,0};// LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
+//    int buttonSelect = 0;
+//    int currentSetting = 0;
+//    do {
+//		lcd.clear(); // clear the display
+//	  	lcd.drawString("LLx: " + settings[0], 0, 0);
+//	  	lcd.drawString("LLy: " + settings[1], 0, 1);
+//	  	lcd.drawString("URx: " + settings[2], 0, 2);
+//	  	lcd.drawString("URy: " + settings[3], 0, 3);
+//	  	lcd.drawString("TR: " + settings[4], 0, 4);
+//	  	lcd.drawString("SC: " + settings[5], 0, 5);
+//	  	lcd.drawString("Down: Next | Up: Done", 0, 6);
+//	  	
+//	  	buttonSelect = Button.waitForAnyPress(); // Record choice (left or right press)
+//	  	switch (buttonSelect) {
+//	  	case Button.ID_LEFT: 
+//	  		settings[currentSetting]--;
+//	  		break;
+//	  	case Button.ID_RIGHT:
+//	  		settings[currentSetting]++;
+//	  		break;
+//	  	case Button.ID_DOWN:
+//	  		currentSetting = (currentSetting++)%6;
+//	  		break;
+//	  	}
+//    } while (buttonSelect != Button.ID_UP);
+//    
+//    Search s = new Search(nav, odometer, settings);
+//    s.start();
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);

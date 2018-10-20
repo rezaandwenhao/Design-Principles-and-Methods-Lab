@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.lab5;
 
-import ca.mcgill.ecse211.lab5.Odometer;
+import ca.mcgill.ecse211.odometer.Odometer;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -58,7 +58,14 @@ public class ColorSensorLocalization extends Thread {
 
     // Rotate, note angle down when detecting any grid line
     doLightLocalization();
-
+    
+    
+	//Sensor in back
+    //Do the calculation with angles recorded and travel to (0,0)
+//  double xTheta = xyMinusPlus[2] - xyMinusPlus[0]; //xPlus - xMinus
+//  double yTheta = xyMinusPlus[3] - xyMinusPlus[1]; //yMinus - yPlus
+    
+    //FRONT
     // Do the calculation with angles recorded and travel to (0,0)
     double xTheta = xyMinusPlus[1] - xyMinusPlus[3]; //xPlus - xMinus
     double yTheta = xyMinusPlus[2] - xyMinusPlus[0]; //yMinus - yPlus

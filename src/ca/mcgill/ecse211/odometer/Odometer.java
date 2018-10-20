@@ -8,7 +8,7 @@
  * @author Michael Smith
  */
 
-package ca.mcgill.ecse211.lab5;
+package ca.mcgill.ecse211.odometer;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
