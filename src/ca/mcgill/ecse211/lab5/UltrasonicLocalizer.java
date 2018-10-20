@@ -14,14 +14,25 @@ public class UltrasonicLocalizer extends Thread{
 	private float[] usData;
 	private Navigation nav;
 	private Odometer odo;
+	private boolean fallingEdge;
+
 	private boolean pastView;
 	
-	public UltrasonicLocalizer(SampleProvider usMean, float[] usData, Navigation nav, Odometer odo) {
+	public UltrasonicLocalizer(SampleProvider usMean, float[] usData, Navigation nav, Odometer odo, boolean fallingEdge) {
 		this.usMean = usMean;
 		this.usData = usData;
 		this.nav = nav;
 		this.odo = odo;
 		this.pastView = true;
+		this.fallingEdge = fallingEdge;
+	}
+	
+	public void run() {
+		if (this.fallingEdge) {
+			fallingEdge();
+		} else {
+			risingEdge();
+		}
 	}
 	
 	/**
@@ -32,7 +43,7 @@ public class UltrasonicLocalizer extends Thread{
 	 * Turn counter clockwise until you see a falling edge -> Record angle
 	 * Set new angle
 	 */
-	public void fallingEdge() {
+	private void fallingEdge() {
 		
 		if (seeingSomething()) {
 			nav.rotate(true, 360, false); // rotate clockwise
@@ -52,7 +63,7 @@ public class UltrasonicLocalizer extends Thread{
 
 		nav.rotate(false, 360, false); // rotate counter-clockwise
 		long snapshot = System.currentTimeMillis();
-		while(seeingSomething() || (System.currentTimeMillis() - snapshot > 1000));
+		while(seeingSomething() || (System.currentTimeMillis() - snapshot > 2000));
 		nav.stop();
 		
 		nav.rotate(false, 360, false); // rotate counter-clockwise
@@ -77,7 +88,7 @@ public class UltrasonicLocalizer extends Thread{
 	 * Turn clockwise until you see the wall -> Continue until you see another rising edge
 	 * Record angle -> Set new angle
 	 */
-	public void risingEdge() {
+	private void risingEdge() {
 		
 		if (!seeingSomething()) {
 			nav.rotate(true, 360, false); // rotate clockwise

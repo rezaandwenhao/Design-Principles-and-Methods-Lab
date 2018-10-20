@@ -1,7 +1,6 @@
 package ca.mcgill.ecse211.lab5;
 
 import ca.mcgill.ecse211.odometer.Odometer;
-import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
@@ -19,194 +18,120 @@ import lejos.robotics.SampleProvider;
 public class ColorSensorLocalization extends Thread {
   private EV3LargeRegulatedMotor leftMotor = Lab5.leftMotor;
   private EV3LargeRegulatedMotor rightMotor = Lab5.rightMotor;
-  private static final double WHEEL_RAD = Lab5.WHEEL_RAD;
-  private static final double TRACK = Lab5.TRACK;
+
   
   private Odometer odo;
   private Navigation nav;
 
-  private static final int FORWARD_SPEED = 100;
-  private static final int TURNING_SPEED = 100;
-  private static final int ACCELERATION = 200;
-  private static final double CENTERTOSENSOR = 5;
-  private static final double COLOR_THRESHOLD = 0.28;
-  private static final int CORRECTION = 5; // correction apply to the final turn, determined by our test
+  private final int LIGHT_Y_OFFSET = 9; // Y offset to account for the light sensor not being in the middle (cm)
+  private final int LIGHT_X_OFFSET = 10; // X offset to account for the light sensor not being in the middle (cm)
+  private static final double COLOR_THRESHOLD = 20; // has been changed for Lab 5
 
-  private double[] xyMinusPlus = new double[4];
 
-  private SampleProvider colorSampleP;
-  private float[] sampleColor;
+  private SampleProvider lightMeanL;
+  public float[] lightDataL;
+  private SampleProvider lightMeanR;
+  public float[] lightDataR;
   
-  public ColorSensorLocalization(Navigation nav, Odometer odo, SampleProvider lightMean, float[] lightData) {
+  public ColorSensorLocalization(Navigation nav, Odometer odo, SampleProvider lightMean1, float[] lightData1, SampleProvider lightMean2, float[] lightData2) {
       this.nav = nav;
       this.odo = odo;
-      this.colorSampleP = lightMean;
-      this.sampleColor = lightData;
+      this.lightMeanL = lightMean1;
+      this.lightDataL = lightData1;
+      this.lightMeanR = lightMean2;
+      this.lightDataR = lightData2;
   }
 
   public void run() {
-    Button.waitForAnyPress();
     leftMotor.stop();
     rightMotor.stop();
-
-    // Set the acceleration so the motor will accelerate gradually
-    leftMotor.setAcceleration(ACCELERATION);
-    rightMotor.setAcceleration(ACCELERATION);
-
-    // Get the robot closer to the origin ensure that the light localization can touch 4 grid lines
-    getCloserToOrigin();
-
-    // Rotate, note angle down when detecting any grid line
-    doLightLocalization();
+   
+    // Read both sensors once at first
+    lightMeanL.fetchSample(lightDataL, 0); // acquire data
+	int lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+	
+	lightMeanR.fetchSample(lightDataR, 0); // acquire data
+	int lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+	
+	// Move forwards until first sensor hits line
+	nav.moveForward(30, false, 30);
+	while (lightL > COLOR_THRESHOLD && lightR > COLOR_THRESHOLD) { // move forward until you hit a black band
+		lightMeanL.fetchSample(lightDataL, 0); // acquire data
+		lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+		lightMeanR.fetchSample(lightDataR, 0); // acquire data
+		lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+	}
+	Sound.beep();
+	nav.stop();
+	
+	// Move whichever sensor didn't hit line until it hits the line
+	if (lightL > COLOR_THRESHOLD) {
+		nav.moveLeftMotor(10, false, 30);
+		while (lightL > COLOR_THRESHOLD) {
+			lightMeanL.fetchSample(lightDataL, 0); // acquire data
+			lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+		}
+		Sound.beep();
+		nav.stop();
+	} else if (lightR > COLOR_THRESHOLD) {
+		nav.moveRightMotor(10, false, 30);
+		while (lightR > COLOR_THRESHOLD) {
+			lightMeanR.fetchSample(lightDataR, 0); // acquire data
+			lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+		}
+		Sound.beep();
+		nav.stop();
+	}
+	
+	Sound.beepSequence();
+	odo.setX(0-LIGHT_X_OFFSET); // set Y coordinate to 0
     
-    
-	//Sensor in back
-    //Do the calculation with angles recorded and travel to (0,0)
-//  double xTheta = xyMinusPlus[2] - xyMinusPlus[0]; //xPlus - xMinus
-//  double yTheta = xyMinusPlus[3] - xyMinusPlus[1]; //yMinus - yPlus
-    
-    //FRONT
-    // Do the calculation with angles recorded and travel to (0,0)
-    double xTheta = xyMinusPlus[1] - xyMinusPlus[3]; //xPlus - xMinus
-    double yTheta = xyMinusPlus[2] - xyMinusPlus[0]; //yMinus - yPlus
+	nav.moveBackward(5, true);
+	nav.rotate(true, 90, true);
+	
+	// Read both sensors once at first
+    lightMeanL.fetchSample(lightDataL, 0); // acquire data
+	lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+	
+	lightMeanR.fetchSample(lightDataR, 0); // acquire data
+	lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+	
+	// Move forwards until first sensor hits line
+	nav.moveForward(30, false, 30);
+	while (lightL > COLOR_THRESHOLD && lightR > COLOR_THRESHOLD) { // move forward until you hit a black band
+		lightMeanL.fetchSample(lightDataL, 0); // acquire data
+		lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+		lightMeanR.fetchSample(lightDataR, 0); // acquire data
+		lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+	}
+	Sound.beep();
+	nav.stop();
+	
+	// Move whichever sensor didn't hit line until it hits the line
+	if (lightL > COLOR_THRESHOLD) {
+		nav.moveLeftMotor(10, false, 30);
+		while (lightL > COLOR_THRESHOLD) {
+			lightMeanL.fetchSample(lightDataL, 0); // acquire data
+			lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+		}
+		Sound.beep();
+		nav.stop();
+	} else if (lightR > COLOR_THRESHOLD) {
+		nav.moveRightMotor(10, false, 30);
+		while (lightR > COLOR_THRESHOLD) {
+			lightMeanR.fetchSample(lightDataR, 0); // acquire data
+			lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+		}
+		Sound.beep();
+		nav.stop();
+	}
+	Sound.beepSequence();
+	odo.setY(0-LIGHT_Y_OFFSET); // set Y coordinate to 0
 
-    double x = -CENTERTOSENSOR * Math.cos((yTheta / 2) * Math.PI / 180);
-    double y = -CENTERTOSENSOR * Math.cos((xTheta / 2) * Math.PI / 180);
-    double deltaTheta = 270 - xyMinusPlus[3] + (yTheta / 2);
-
-    odo.setX(x);
-    odo.setY(y);
-    odo.setTheta(odo.getXYT()[2] + deltaTheta);
- 
     nav.travelTo(0, 0);
-
     // let robot turn back to 0 degree
-    leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, odo.getXYT()[2]+CORRECTION), true);
-    rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, odo.getXYT()[2]+CORRECTION), false);
+    nav.turnTo(0);
   }
   
-  /**
-   * This method gets the robot closer to the origin to ensure that the light
-   * localization can touch 4 grid lines. After ultrasonic localization, the robot
-   * is roughly at 0 degree facing away from the wall. We let the robot travel
-   * forward until it detects a grid line. And then, it moves backward for 20cm.
-   * By doing so, the robot will be reasonably close to the x axis. We turn right
-   * the robot 90 degrees and do the same routine again. The robot will end up
-   * being close to y axis.
-   */
-  private void getCloserToOrigin() {
 
-    // The robot is moving forward until a grid line is detected
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
-
-    leftMotor.forward();
-    rightMotor.forward();
-
-    while (leftMotor.isMoving() && rightMotor.isMoving()) {
-      // fetching the values from the color sensor
-      colorSampleP.fetchSample(sampleColor, 0);
-      float value = sampleColor[0];
-      if (value < COLOR_THRESHOLD) {
-        // When detected black line, the method is returned
-        Sound.beep();
-        break;
-      }
-    }
-
-    // Reverse 20cm
-    nav.moveForward(2, true);
-
-    leftMotor.setSpeed(TURNING_SPEED);
-    rightMotor.setSpeed(TURNING_SPEED);
-
-    // right turn 90 degrees
-    leftMotor.rotate(convertAngle(WHEEL_RAD, TRACK, 90), true);
-    rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, 90), false);
-
-    // Move forward again until a grid line is detected
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
-
-    leftMotor.forward();
-    rightMotor.forward();
-
-    while (leftMotor.isMoving() && rightMotor.isMoving()) {
-      // fetching the values from the color sensor
-      colorSampleP.fetchSample(sampleColor, 0);
-      float value = sampleColor[0];
-      if (value < COLOR_THRESHOLD) {
-        // When detected black line, the method is returned
-        Sound.beep();
-        break;
-      }
-    }
-
-    //reverse 20cm
-    nav.moveForward(2, true);
-
-    leftMotor.setSpeed(TURNING_SPEED);
-    rightMotor.setSpeed(TURNING_SPEED);
-
-    // left turn 90 degrees
-    leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, 90), true);
-    rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, 90), false);
-  }
-
-  /**
-   * This method renders the robot turn 360 degrees clockwise and then store the
-   * theta on odometer everytime (should be 4 times in total) it detects a grid line
-   */
-  private void doLightLocalization() {
-    int lineCtr = 0;
-    
-    leftMotor.setSpeed(TURNING_SPEED);
-    rightMotor.setSpeed(TURNING_SPEED);
-
-    // rotate the robot 360 degrees clockwise
-    leftMotor.rotate(convertAngle(WHEEL_RAD, TRACK, 360), true);
-    rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, 360), true);
-
-    while (leftMotor.isMoving() && rightMotor.isMoving()) {
-      // fetching the values from the color sensor
-      colorSampleP.fetchSample(sampleColor, 0);
-      float value = sampleColor[0];
-
-      if (value < COLOR_THRESHOLD) {
-        Sound.beep();
-        // store the odometer theta to xyMinusPlus where
-        // yPlus = xyMinusPlus[0], xPlus = xyMinusPlus[1], yMinus = xyMinusPlus[2], xMinus = xyMinusPlus[3]
-        if (lineCtr == 4) {
-          // do nothing
-        } else {
-          xyMinusPlus[lineCtr] = odo.getXYT()[2];
-          lineCtr++;
-        }
-      }
-
-    }
-  }
-
-  /**
-   * This method allows the conversion of a distance to the total rotation of each wheel need to
-   * cover that distance.
-   * 
-   * @param radius
-   * @param distance
-   */
-  private static int convertDistance(double radius, double distance) {
-    return (int) ((180.0 * distance) / (Math.PI * radius));
-  }
-
-  /**
-   * This method allows the conversion of an angle to the total rotation of each wheel need to
-   * turn that angle.
-   * 
-   * @param radius
-   * @param width
-   * @param angle
-   */
-  private static int convertAngle(double radius, double width, double angle) {
-    return convertDistance(radius, Math.PI * width * angle / 360.0);
-  }
 }

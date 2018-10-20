@@ -36,16 +36,16 @@ public class Navigation {
    * reach the point x,y.
    * Then rotates the wheels the exact distance from the current position to
    * the point x,y.
-   * @param x
-   * @param y
+   * @param x in cm
+   * @param y in cm
    */
   public void travelTo(double x, double y) {
 	  
 	  double currentPos[] = odo.getXYT();
 	  
 	  //difference in position
-	  double deltaX = x*TILE_SIZE-currentPos[0];
-	  double deltaY = y*TILE_SIZE-currentPos[1];
+	  double deltaX = x-currentPos[0];
+	  double deltaY = y-currentPos[1];
 	  
 	  // length of straight line from current position to desired position
 	  double hypotenuse = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
@@ -62,7 +62,7 @@ public class Navigation {
 	  turnTo(desiredAngle);
 	  
 	  //move forwards to reach the point x,y.
-	  moveForward(hypotenuse, true);
+	  moveForward(hypotenuse, true, FORWARD_SPEED);
   }
   
   /**
@@ -71,7 +71,7 @@ public class Navigation {
    * @param theta: angle at which to turn clockwise
    * @param currentAngle: angle at which the robot is currently oriented
    */
-  void turnTo(double theta) {
+  public void turnTo(double theta) {
 	  double toRotate = theta - odo.getXYT()[2];
 	  
 	  if (toRotate > 180.0d) {
@@ -92,7 +92,7 @@ public class Navigation {
    * @param angle
    * @param wait: if the robot should wait for the rotation to terminate.
    */
-  void rotate(boolean clockwise, int angle, boolean wait) {
+  public void rotate(boolean clockwise, int angle, boolean wait) {
 	  motorL.setSpeed(ROTATE_SPEED);
       motorR.setSpeed(ROTATE_SPEED);
 	  if (clockwise) {
@@ -109,12 +109,35 @@ public class Navigation {
    * @param distance
    * @param wait: if the robot should wait for the rotation to terminate.
    */
-  void moveForward(double distance, boolean wait) {
-	  motorL.setSpeed(FORWARD_SPEED);
-	  motorR.setSpeed(FORWARD_SPEED);
+  public void moveForward(double distance, boolean wait, int speed) {
+	  motorL.setSpeed(speed);
+	  motorR.setSpeed(speed);
 
       motorL.rotate(convertDistance(leftRadius, distance), true);
       motorR.rotate(convertDistance(rightRadius, distance), !wait);
+  }
+  
+
+  public void moveBackward(double distance, boolean wait) {
+	  motorL.setSpeed(FORWARD_SPEED);
+	  motorR.setSpeed(FORWARD_SPEED);
+
+      motorL.rotate(-convertDistance(leftRadius, distance), true);
+      motorR.rotate(-convertDistance(rightRadius, distance), !wait);	
+  }
+  
+
+
+  public void moveLeftMotor(int distance, boolean wait, int speed) {
+	  motorL.setSpeed(speed);
+	  
+	  motorL.rotate(convertDistance(leftRadius, distance), !wait);
+  }
+  
+  public void moveRightMotor(int distance, boolean wait, int speed) {
+	  motorR.setSpeed(speed);
+	  
+	  motorR.rotate(convertDistance(rightRadius, distance), !wait);
   }
 
   /**
@@ -140,4 +163,6 @@ public class Navigation {
 	motorL.stop(true);
 	motorR.stop(false);
   }
+
+
 }

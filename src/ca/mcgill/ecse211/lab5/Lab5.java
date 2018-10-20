@@ -7,6 +7,7 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
@@ -17,18 +18,23 @@ import lejos.robotics.filter.MeanFilter;
 /**
  * Main Class for Lab 5 - ECSE 211 Fall 2018
  * @author Eliott Bourachot
- *
  */
 public class Lab5 {
 
-  // Motor Objects, and Robot related parameters
+  // Motor Objects
   static final EV3LargeRegulatedMotor leftMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+		  new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   static final EV3LargeRegulatedMotor rightMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+		  new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  static final EV3MediumRegulatedMotor mediumMotor =
+		  new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
+  // Sensors
   private static final Port usPort = LocalEV3.get().getPort("S1");
-  private static final Port lightPort = LocalEV3.get().getPort("S2");
+  private static final Port lightLPort = LocalEV3.get().getPort("S4");
+  private static final Port lightRPort = LocalEV3.get().getPort("S2");
   private static final Port colorPort = LocalEV3.get().getPort("S3"); 
+  
+  // Robot related parameters
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final double WHEEL_RAD = 2.13; // (cm) measured with caliper
   public static double TRACK = 9.0; // (cm) measured with caliper
@@ -39,6 +45,14 @@ public class Lab5 {
 	Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
 	Thread odoThread = new Thread(odometer);
 	odoThread.start();
+    
+	 //Navigation
+    Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer);
+    
+ // Display Thread
+    Display generalDisplay = new Display(lcd); // No need to change
+    Thread displayThread = new Thread(generalDisplay);
+    displayThread.start();
 
 	// Initializing Ultrasonic Sensor and runs it in this thread
 	@SuppressWarnings("resource") // Because we don't bother to close this resource
@@ -46,64 +60,42 @@ public class Lab5 {
 	SampleProvider usSample = usSensor.getMode("Distance"); 
 	SampleProvider usMean = new MeanFilter(usSample, 5); // use a mean filter to reduce fluctuations
     float[] usData = new float[usMean.sampleSize()]; // usData is the buffer in which data are returned
-    
-    Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer);
-    
-    final UltrasonicLocalizer ul = new UltrasonicLocalizer(usMean, usData, nav, odometer);
-
-    int buttonChoice = 0;
-
-    do {
-		lcd.clear(); // clear the display
-	  	lcd.drawString("<Left   | Right  >", 0, 0);
-	  	lcd.drawString("<Rising | Falling>", 0, 1);
-	  	lcd.drawString("<Edge   | Edge   >", 0, 2);
-	    
-	  	buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
-    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
-    
-    final int buttonChoice2 = buttonChoice;
-
-    // Display Thread
-    Display generalDisplay = new Display(lcd); // No need to change
-    Thread displayThread = new Thread(generalDisplay);
-    displayThread.start();
-    
-	// Ultrasonic Sensor Thread
-  	(new Thread() {
-    	public void run() {
-    		if (buttonChoice2 == Button.ID_RIGHT) {
-    			ul.fallingEdge();
-    		} else {
-    			ul.risingEdge();
-    		}
-    	}
-    }).start();
-  	
+ 
+	UltrasonicLocalizer ul = new UltrasonicLocalizer(usMean, usData, nav, odometer, true);
+	ul.start();
+      
     while (Button.waitForAnyPress() != Button.ID_ENTER);
-    
-    // Initializing Light Sensor and runs it in this thread
+	
+    // Initializing Light Sensor 1 and runs it in this thread
   	@SuppressWarnings("resource") // Because we don't bother to close this resource
-  	SensorModes lightSensor = new EV3ColorSensor(lightPort); // lightSensor is the instance
-  	SampleProvider lightSample = lightSensor.getMode("Red"); // init Red mode
-  	SampleProvider lightMean = new MeanFilter(lightSample, 5); // use a mean filter to reduce fluctuations
-    float[] lightData = new float[lightMean.sampleSize()]; // usData is the buffer in which data are returned
+  	SensorModes lightSensor1 = new EV3ColorSensor(lightLPort); // lightSensor is the instance
+  	SampleProvider lightSample1 = lightSensor1.getMode("Red"); // init Red mode
+  	SampleProvider lightMean1 = new MeanFilter(lightSample1, 5); // use a mean filter to reduce fluctuations
+    float[] lightData1 = new float[lightMean1.sampleSize()]; // usData is the buffer in which data are returned
     
+    // Initializing Light Sensor 2 and runs it in this thread
+   	@SuppressWarnings("resource") // Because we don't bother to close this resource
+   	SensorModes lightSensor2 = new EV3ColorSensor(lightRPort); // lightSensor is the instance
+   	SampleProvider lightSample2 = lightSensor2.getMode("Red"); // init Red mode
+   	SampleProvider lightMean2 = new MeanFilter(lightSample2, 5); // use a mean filter to reduce fluctuations
+    float[] lightData2 = new float[lightMean2.sampleSize()]; // usData is the buffer in which data are returned
+       
     // Light Localizer Thread
-    ColorSensorLocalization csl = new ColorSensorLocalization(nav, odometer, lightMean, lightData);
+    ColorSensorLocalization csl = new ColorSensorLocalization(nav, odometer, lightMean1, lightData1, lightMean2, lightData2);
     csl.start();
+   
     
     while (Button.waitForAnyPress() != Button.ID_ENTER);
 
- // Initializing Color Sensor and runs it in this thread
-   	@SuppressWarnings("resource") // Because we don't bother to close this resource
-   	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
-   	SampleProvider colorSample = colorSensor.getMode("RGB"); // init RGB mode
-   	SampleProvider colorMean = new MeanFilter(colorSample, 5); // use a mean filter to reduce fluctuations
-    float[] colorData = new float[colorMean.sampleSize()]; // usData is the buffer in which data are returned
-     
-    // Color Classifier Thread
-    ColorClassifier cc = new ColorClassifier(colorMean, colorData);
+    // Initializing Color Sensor and runs it in this thread
+ 	@SuppressWarnings("resource") // Because we don't bother to close this resource
+ 	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
+ 	SampleProvider colorSample = colorSensor.getMode("RGB"); // init RGB mode
+ 	SampleProvider colorMean = new MeanFilter(colorSample, 5); // use a mean filter to reduce fluctuations
+ 	float[] colorData = new float[colorMean.sampleSize()]; // usData is the buffer in which data are returned
+   
+ 	// Color Classifier Thread
+ 	ColorClassifier cc = ColorClassifier.getColorClassifier(colorMean, colorData);
     cc.start();
     
 //    int[] settings = {0,0,0,0,0,0};// LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
@@ -111,13 +103,17 @@ public class Lab5 {
 //    int currentSetting = 0;
 //    do {
 //		lcd.clear(); // clear the display
-//	  	lcd.drawString("LLx: " + settings[0], 0, 0);
-//	  	lcd.drawString("LLy: " + settings[1], 0, 1);
-//	  	lcd.drawString("URx: " + settings[2], 0, 2);
-//	  	lcd.drawString("URy: " + settings[3], 0, 3);
-//	  	lcd.drawString("TR: " + settings[4], 0, 4);
-//	  	lcd.drawString("SC: " + settings[5], 0, 5);
-//	  	lcd.drawString("Down: Next | Up: Done", 0, 6);
+//		
+//		String[] currentArrow = {"", "", "", "", "", ""};
+//		currentArrow[currentSetting] = "->";
+//		
+//	  	lcd.drawString(currentArrow + "LLx: " + settings[0], 0, 0);
+//	  	lcd.drawString(currentArrow + "LLy: " + settings[1], 0, 1);
+//	  	lcd.drawString(currentArrow + "URx: " + settings[2], 0, 2);
+//	  	lcd.drawString(currentArrow + "URy: " + settings[3], 0, 3);
+//	  	lcd.drawString(currentArrow + "TR: " + settings[4], 0, 4);
+//	  	lcd.drawString(currentArrow + "SC: " + settings[5], 0, 5);
+//	  	lcd.drawString("Press Enter to Exit", 0, 6);
 //	  	
 //	  	buttonSelect = Button.waitForAnyPress(); // Record choice (left or right press)
 //	  	switch (buttonSelect) {
@@ -130,8 +126,11 @@ public class Lab5 {
 //	  	case Button.ID_DOWN:
 //	  		currentSetting = (currentSetting++)%6;
 //	  		break;
+//	  	case Button.ID_UP:
+//	  		currentSetting = (currentSetting--)%6;
+//	  		break;
 //	  	}
-//    } while (buttonSelect != Button.ID_UP);
+//    } while (buttonSelect != Button.ID_ENTER);
 //    
 //    Search s = new Search(nav, odometer, settings);
 //    s.start();
