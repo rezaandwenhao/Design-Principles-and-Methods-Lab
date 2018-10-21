@@ -45,10 +45,25 @@ public class Lab5 {
 	Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
 	Thread odoThread = new Thread(odometer);
 	odoThread.start();
+	
+    // Initializing Light Sensor 1 and runs it in this thread
+    @SuppressWarnings("resource") // Because we don't bother to close this resource
+    SensorModes lightSensor1 = new EV3ColorSensor(lightLPort); // lightSensor is the instance
+    SampleProvider lightSample1 = lightSensor1.getMode("Red"); // init Red mode
+    SampleProvider lightMean1 = new MeanFilter(lightSample1, 5); // use a mean filter to reduce fluctuations
+    float[] lightData1 = new float[lightMean1.sampleSize()]; // usData is the buffer in which data are returned
     
-	 //Navigation
-    Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer, mediumMotor);
+    // Initializing Light Sensor 2 and runs it in this thread
+    @SuppressWarnings("resource") // Because we don't bother to close this resource
+    SensorModes lightSensor2 = new EV3ColorSensor(lightRPort); // lightSensor is the instance
+    SampleProvider lightSample2 = lightSensor2.getMode("Red"); // init Red mode
+    SampleProvider lightMean2 = new MeanFilter(lightSample2, 5); // use a mean filter to reduce fluctuations
+    float[] lightData2 = new float[lightMean2.sampleSize()]; // usData is the buffer in which data are returned
     
+    // Navigation
+    Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer, mediumMotor,
+        lightMean1, lightData1, lightMean2, lightData2);
+
  // Display Thread
     Display generalDisplay = new Display(lcd); // No need to change
     Thread displayThread = new Thread(generalDisplay);
@@ -65,20 +80,6 @@ public class Lab5 {
 	ul.start();
       
     while (Button.waitForAnyPress() != Button.ID_ENTER);
-	
-    // Initializing Light Sensor 1 and runs it in this thread
-  	@SuppressWarnings("resource") // Because we don't bother to close this resource
-  	SensorModes lightSensor1 = new EV3ColorSensor(lightLPort); // lightSensor is the instance
-  	SampleProvider lightSample1 = lightSensor1.getMode("Red"); // init Red mode
-  	SampleProvider lightMean1 = new MeanFilter(lightSample1, 5); // use a mean filter to reduce fluctuations
-    float[] lightData1 = new float[lightMean1.sampleSize()]; // usData is the buffer in which data are returned
-    
-    // Initializing Light Sensor 2 and runs it in this thread
-   	@SuppressWarnings("resource") // Because we don't bother to close this resource
-   	SensorModes lightSensor2 = new EV3ColorSensor(lightRPort); // lightSensor is the instance
-   	SampleProvider lightSample2 = lightSensor2.getMode("Red"); // init Red mode
-   	SampleProvider lightMean2 = new MeanFilter(lightSample2, 5); // use a mean filter to reduce fluctuations
-    float[] lightData2 = new float[lightMean2.sampleSize()]; // usData is the buffer in which data are returned
        
     // Light Localizer Thread
     ColorSensorLocalization csl = new ColorSensorLocalization(nav, odometer, lightMean1, lightData1, lightMean2, lightData2);

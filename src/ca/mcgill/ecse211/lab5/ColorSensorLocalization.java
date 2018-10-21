@@ -128,7 +128,7 @@ public class ColorSensorLocalization extends Thread {
 	Sound.beepSequence();
 	odo.setY(0-LIGHT_Y_OFFSET); // set Y coordinate to 0
 
-    nav.travelTo(0, 0);
+    nav.travelTo(0, 0, false);
     // let robot turn back to 0 degree
     nav.turnTo(0);
   }

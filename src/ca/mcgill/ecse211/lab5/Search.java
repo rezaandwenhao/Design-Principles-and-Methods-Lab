@@ -17,7 +17,7 @@ public class Search extends Thread{
 	}
 	
 	public void run() {
-		nav.travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE);
+		nav.travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE, false);
 		
 		// start the search
 		
