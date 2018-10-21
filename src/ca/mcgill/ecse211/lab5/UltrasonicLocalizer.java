@@ -48,7 +48,7 @@ public class UltrasonicLocalizer extends Thread{
 		if (seeingSomething()) {
 			nav.rotate(true, 360, false); // rotate clockwise
 			while (seeingSomething()); // if we're facing the wall, turn to face the void
-			nav.stop();
+			nav.stopMotors();
 			
 			nav.rotate(true, 10, true); // rotate a bit more
 			odo.setTheta(odo.getXYT()[2]); // reset 0 angle
@@ -56,7 +56,7 @@ public class UltrasonicLocalizer extends Thread{
 		
 		nav.rotate(true, 360, false); // rotate clockwise
 		while(!seeingSomething());
-		nav.stop();
+		nav.stopMotors();
 		
 		Sound.beep();
 		double angle1 = odo.getXYT()[2];
@@ -64,11 +64,11 @@ public class UltrasonicLocalizer extends Thread{
 		nav.rotate(false, 360, false); // rotate counter-clockwise
 		long snapshot = System.currentTimeMillis();
 		while(seeingSomething() || (System.currentTimeMillis() - snapshot > 2000));
-		nav.stop();
+		nav.stopMotors();
 		
 		nav.rotate(false, 360, false); // rotate counter-clockwise
 		while(!seeingSomething());
-		nav.stop();
+		nav.stopMotors();
 		
 		Sound.beep();
 		double angle2 = odo.getXYT()[2];
@@ -93,7 +93,7 @@ public class UltrasonicLocalizer extends Thread{
 		if (!seeingSomething()) {
 			nav.rotate(true, 360, false); // rotate clockwise
 			while (!seeingSomething()); // if we're looking into the void, turn to face the walls
-			nav.stop();
+			nav.stopMotors();
 			
 			nav.rotate(true, 10, true); // rotate a bit more
 			odo.setTheta(odo.getXYT()[2]); // reset 0 angle
@@ -101,18 +101,18 @@ public class UltrasonicLocalizer extends Thread{
 	
 		nav.rotate(false, 360, false); // rotate counter-clockwise
 		while(seeingSomething());
-		nav.stop();
+		nav.stopMotors();
 		
 		Sound.beep();
 		double angle1 = odo.getXYT()[2];
 		
 		nav.rotate(true, 360, false); // rotate clockwise
 		while(!seeingSomething());
-		nav.stop();
+		nav.stopMotors();
 		
 		nav.rotate(true, 360, false); // rotate clockwise
 		while (seeingSomething());
-		nav.stop();
+		nav.stopMotors();
 		
 		Sound.beep();
 		double angle2 = odo.getXYT()[2];

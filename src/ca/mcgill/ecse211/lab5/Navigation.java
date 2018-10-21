@@ -4,32 +4,46 @@
 package ca.mcgill.ecse211.lab5;
 
 import ca.mcgill.ecse211.odometer.Odometer;
+import lejos.hardware.Button;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.EV3MediumRegulatedMotor;
 
 /**
  * This class is used to drive the robot on the demo floor.
  */
-public class Navigation {
+public class Navigation extends Thread {
   private static final int FORWARD_SPEED = 150;
   private static final int ROTATE_SPEED = 70;
   private static final double TILE_SIZE = 30.48;
   private EV3LargeRegulatedMotor motorL;
   private EV3LargeRegulatedMotor motorR;
+  private EV3MediumRegulatedMotor mediumM;
   private double leftRadius;
   private double rightRadius;
   private double track;
   private Odometer odo;
     
   Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
-	      double leftRadius, double rightRadius, double track, Odometer odo) {
+	      double leftRadius, double rightRadius, double track, Odometer odo, EV3MediumRegulatedMotor mediumM) {
 	  this.motorL = leftMotor;
 	  this.motorR = rightMotor;
 	  this.leftRadius = leftRadius;
 	  this.rightRadius = rightRadius;
 	  this.track = track;
 	  this.odo = odo;
+	  this.mediumM = mediumM;
   }
 
+  
+  public void run() {
+    float[] settings = {1,1,5,5,0,0};// LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
+    travelTo(settings[0]*TILE_SIZE, settings[1]*TILE_SIZE);
+    Button.waitForAnyPress();
+    travelTo((settings[0]+0.5)*TILE_SIZE, (settings[1]+0.5)*TILE_SIZE);
+    travelTo((settings[2]-0.5)*TILE_SIZE, (settings[1]+0.5)*TILE_SIZE);
+    travelTo((settings[2]-0.5)*TILE_SIZE, (settings[1]+1.5)*TILE_SIZE);
+    turnMediumMotor(-90);
+  }
   
   /**
    * Rotates the robot to face the direction in which it needs to travel to
@@ -159,10 +173,14 @@ public class Navigation {
   /**
    * stops the motors at the same time.
    */
-  public void stop() {
+  public void stopMotors() {
 	motorL.stop(true);
 	motorR.stop(false);
   }
 
-
+  public void turnMediumMotor(int angle) {
+    mediumM.setSpeed(50);
+    mediumM.rotate(angle, false);
+  }
+  
 }

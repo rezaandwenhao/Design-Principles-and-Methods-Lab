@@ -62,7 +62,7 @@ public class ColorSensorLocalization extends Thread {
 		lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
 	}
 	Sound.beep();
-	nav.stop();
+	nav.stopMotors();
 	
 	// Move whichever sensor didn't hit line until it hits the line
 	if (lightL > COLOR_THRESHOLD) {
@@ -72,7 +72,7 @@ public class ColorSensorLocalization extends Thread {
 			lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
 		}
 		Sound.beep();
-		nav.stop();
+		nav.stopMotors();
 	} else if (lightR > COLOR_THRESHOLD) {
 		nav.moveRightMotor(10, false, 30);
 		while (lightR > COLOR_THRESHOLD) {
@@ -80,7 +80,7 @@ public class ColorSensorLocalization extends Thread {
 			lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
 		}
 		Sound.beep();
-		nav.stop();
+		nav.stopMotors();
 	}
 	
 	Sound.beepSequence();
@@ -105,7 +105,7 @@ public class ColorSensorLocalization extends Thread {
 		lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
 	}
 	Sound.beep();
-	nav.stop();
+	nav.stopMotors();
 	
 	// Move whichever sensor didn't hit line until it hits the line
 	if (lightL > COLOR_THRESHOLD) {
@@ -115,7 +115,7 @@ public class ColorSensorLocalization extends Thread {
 			lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
 		}
 		Sound.beep();
-		nav.stop();
+		nav.stopMotors();
 	} else if (lightR > COLOR_THRESHOLD) {
 		nav.moveRightMotor(10, false, 30);
 		while (lightR > COLOR_THRESHOLD) {
@@ -123,7 +123,7 @@ public class ColorSensorLocalization extends Thread {
 			lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
 		}
 		Sound.beep();
-		nav.stop();
+		nav.stopMotors();
 	}
 	Sound.beepSequence();
 	odo.setY(0-LIGHT_Y_OFFSET); // set Y coordinate to 0

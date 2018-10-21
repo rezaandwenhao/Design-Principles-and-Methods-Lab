@@ -37,7 +37,7 @@ public class Lab5 {
   // Robot related parameters
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final double WHEEL_RAD = 2.13; // (cm) measured with caliper
-  public static double TRACK = 9.0; // (cm) measured with caliper
+  public static double TRACK = 10.0; // (cm) measured with caliper
  
   public static void main(String[] args) throws OdometerExceptions {
     
@@ -47,7 +47,7 @@ public class Lab5 {
 	odoThread.start();
     
 	 //Navigation
-    Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer);
+    Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer, mediumMotor);
     
  // Display Thread
     Display generalDisplay = new Display(lcd); // No need to change
@@ -58,10 +58,10 @@ public class Lab5 {
 	@SuppressWarnings("resource") // Because we don't bother to close this resource
 	SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
 	SampleProvider usSample = usSensor.getMode("Distance"); 
-	SampleProvider usMean = new MeanFilter(usSample, 5); // use a mean filter to reduce fluctuations
-    float[] usData = new float[usMean.sampleSize()]; // usData is the buffer in which data are returned
+	//SampleProvider usMean = new MeanFilter(usSample, 5); // use a mean filter to reduce fluctuations
+    float[] usData = new float[usSample.sampleSize()]; // usData is the buffer in which data are returned
  
-	UltrasonicLocalizer ul = new UltrasonicLocalizer(usMean, usData, nav, odometer, true);
+	UltrasonicLocalizer ul = new UltrasonicLocalizer(usSample, usData, nav, odometer, true);
 	ul.start();
       
     while (Button.waitForAnyPress() != Button.ID_ENTER);
@@ -89,13 +89,14 @@ public class Lab5 {
 
     // Initializing Color Sensor and runs it in this thread
  	@SuppressWarnings("resource") // Because we don't bother to close this resource
- 	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
- 	SampleProvider colorSample = colorSensor.getMode("RGB"); // init RGB mode
+/* 	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
+ 	SampleProvider colorSample = colorSensor.getMode("Color ID"); // init RGB mode
  	SampleProvider colorMean = new MeanFilter(colorSample, 5); // use a mean filter to reduce fluctuations
- 	float[] colorData = new float[colorMean.sampleSize()]; // usData is the buffer in which data are returned
-   
+ 	float[] colorData = new float[colorSensor.sampleSize()]; // usData is the buffer in which data are returned
+*/   
  	// Color Classifier Thread
- 	ColorClassifier cc = ColorClassifier.getColorClassifier(colorMean, colorData);
+ 	ColorClassifier cc = ColorClassifier.getColorClassifier(null, null);
+ 	nav.start();
     cc.start();
     
 //    int[] settings = {0,0,0,0,0,0};// LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;

@@ -2,9 +2,12 @@ package ca.mcgill.ecse211.lab5;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.Color;
 import lejos.robotics.SampleProvider;
 
@@ -12,14 +15,21 @@ public class ColorClassifier extends Thread {
 
 	private static int COLOR_CORRECTION_PERIOD = 100;
 	private static ColorClassifier cc;
-	private SampleProvider colorMean;
-	private float[] colorData;
-	private String detectedColor;
+//	private SampleProvider colorProvider;
+//	private float[] colorData;
+	public static String detectedColor;
+	//public static float red, green, blue;
+	
+	  // initializing color sensor, color sample provider, and an array to hold samples
+	  private static Port colorSensor = LocalEV3.get().getPort("S3");
+	  private static SensorModes mode = new EV3ColorSensor(colorSensor);
+	  private static SampleProvider colorSampleP = mode.getMode("ColorID");
+	  private static float[] sampleColor = new float[mode.sampleSize()];
 	
 	public ColorClassifier(SampleProvider colorMean, float[] colorData) {
-		this.colorMean = colorMean;
-		this.colorData = colorData;
-		this.detectedColor = null;
+//		this.colorProvider = colorProvider;
+//		this.colorData = colorData;
+		ColorClassifier.detectedColor = null;
 	}
 	
 	/**
@@ -51,9 +61,24 @@ public class ColorClassifier extends Thread {
 		while(true) {
 		    updateStart = System.currentTimeMillis();
 
-			colorMean.fetchSample(colorData, 0);
-		    float red = colorData[0], green = colorData[1], blue = colorData[2];
-		    if (red > green && red > blue) {
+			colorSampleP.fetchSample(sampleColor, 0);
+			
+		   // red = colorData[0];
+		   // System.out.println("red: " + red*1000);
+		   // green = colorData[1]; 
+		   // blue = colorData[2];
+			if (1.5 < sampleColor[0] && sampleColor[0] < 2.5) {
+			  detectedColor= "blue";
+			} else if (5.5 < sampleColor[0] && sampleColor[0] < 6.5) {
+			  detectedColor= "green";
+			} else if (2.5 < sampleColor[0] && sampleColor[0] < 3.5) {
+			  detectedColor= "yellow";
+			} else if (-0.5 < sampleColor[0] && sampleColor[0] < 0.5) {
+              detectedColor= "orange";
+			} else {
+			  detectedColor="Nothing";
+			}
+		    /*if (red > green && red > blue) {
 		    	detectedColor = "Red";
 		    } else if (green > red && green > blue) {
 		    	detectedColor = "Green";
@@ -61,7 +86,7 @@ public class ColorClassifier extends Thread {
 		    	detectedColor = "Blue";
 		    } else {
 		    	detectedColor = "None";
-		    }
+		    }*/
 		    
 		    // this ensures that the odometer only runs once every period
 		      updateEnd = System.currentTimeMillis();
@@ -76,7 +101,7 @@ public class ColorClassifier extends Thread {
 	}	   
 	
 	public float[] getColorData() {
-		return colorData;
+		return sampleColor;
 	}
 	
 	public String getDetectedColor() {
