@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.lab5;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -73,7 +74,7 @@ public class ColorClassifier extends Thread {
 			  detectedColor= "green";
 			} else if (2.5 < sampleColor[0] && sampleColor[0] < 3.5) {
 			  detectedColor= "yellow";
-			} else if (-0.5 < sampleColor[0] && sampleColor[0] < 0.5) {
+			} else if (12.5 < sampleColor[0] && sampleColor[0] < 13.5) {
               detectedColor= "orange";
 			} else {
 			  detectedColor="Nothing";

@@ -25,7 +25,7 @@ public class ColorSensorLocalization extends Thread {
 
   private final int LIGHT_Y_OFFSET = 9; // Y offset to account for the light sensor not being in the middle (cm)
   private final int LIGHT_X_OFFSET = 10; // X offset to account for the light sensor not being in the middle (cm)
-  private static final double COLOR_THRESHOLD = 20; // has been changed for Lab 5
+  private static final double COLOR_THRESHOLD = 17; // has been changed for Lab 5
 
 
   private SampleProvider lightMeanL;

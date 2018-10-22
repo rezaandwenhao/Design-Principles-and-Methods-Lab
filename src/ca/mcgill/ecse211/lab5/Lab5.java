@@ -37,7 +37,7 @@ public class Lab5 {
   // Robot related parameters
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final double WHEEL_RAD = 2.13; // (cm) measured with caliper
-  public static double TRACK = 10.0; // (cm) measured with caliper
+  public static double TRACK = 9.0; // (cm) measured with caliper
  
   public static void main(String[] args) throws OdometerExceptions {
     

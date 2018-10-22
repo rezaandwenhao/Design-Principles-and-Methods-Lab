@@ -17,7 +17,7 @@ public class Navigation extends Thread {
   private static final int FORWARD_SPEED = 150;
   private static final int ROTATE_SPEED = 70;
   private static final double TILE_SIZE = 30.48;
-  private static final double COLOR_THRESHOLD = 20; // has been changed for Lab 5
+  private static final double COLOR_THRESHOLD = 17; // has been changed for Lab 5
 
   
   private EV3LargeRegulatedMotor motorL;
@@ -55,9 +55,50 @@ public class Navigation extends Thread {
 
   
   public void run() {
-    float[] settings = {1,1,5,5,0,0};// LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
-    float LLx = settings[0], LLy = settings[1], URx = settings[2], URy = settings[3];
+    int[] settings = {1,1,4,4,0,0}; // LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
+    int LLx = settings[0], LLy = settings[1], URx = settings[2], URy = settings[3];
+    
     travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE, false);
+    Button.waitForAnyPress();
+    travelTo((LLx+0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE, false);
+    
+    int height = URy - LLy - 1;
+    int currentY = 0;
+    boolean right = true;
+    while (currentY < height) {
+      currentY++;
+      if (right) {
+        right = false;
+        turnTo(90);
+        //using the first vertical black line to correct odo
+        updateOdo((LLx+1)*TILE_SIZE-LIGHT_X_OFFSET, odo.getXYT()[1], 90);
+        moveForward((URx-LLx-1)*TILE_SIZE-LIGHT_X_OFFSET, true, FORWARD_SPEED);
+        //x stays unchanged, update y
+        turnTo(0);
+        updateOdo(odo.getXYT()[0], (LLy+currentY)*TILE_SIZE-LIGHT_Y_OFFSET, 0);
+        moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
+        turnMediumMotor(-180);
+        
+         //right
+      } else {
+        right = true;
+        turnTo(-90);
+        updateOdo((URx-1)*TILE_SIZE+LIGHT_X_OFFSET, odo.getXYT()[1], -90);
+        moveForward((URx-LLx-1)*TILE_SIZE-LIGHT_X_OFFSET, true, FORWARD_SPEED);
+        turnTo(0);
+        updateOdo(odo.getXYT()[0], (LLy+currentY)*TILE_SIZE-LIGHT_Y_OFFSET, 0);
+        moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
+        turnMediumMotor(180);
+        
+        //left
+      }
+    }
+    
+    travelTo(URx*TILE_SIZE, URy*TILE_SIZE, false);
+    
+    
+    
+/*    travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE, false);
     Button.waitForAnyPress();
     travelTo((LLx+0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE, false);
     //only turn to face the RL corner
@@ -71,7 +112,7 @@ public class Navigation extends Thread {
     //x stays unchanged, update y
     updateOdo(odo.getXYT()[0], (LLy+1)*TILE_SIZE-LIGHT_Y_OFFSET);
     moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
-    turnMediumMotor(-90);
+    turnMediumMotor(-180);
     
     rotate(false, 90, true);
     updateOdo((URx-1)*TILE_SIZE+LIGHT_X_OFFSET, odo.getXYT()[1]);
@@ -80,6 +121,7 @@ public class Navigation extends Thread {
     rotate(true, 90, true);
     updateOdo(odo.getXYT()[0], (LLy+2)*TILE_SIZE-LIGHT_Y_OFFSET);
     moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
+    turnMediumMotor(180);
     
     rotate(true, 90, true);
     updateOdo((LLx+1)*TILE_SIZE-LIGHT_X_OFFSET, odo.getXYT()[1]);
@@ -88,7 +130,7 @@ public class Navigation extends Thread {
     rotate(false, 90, true);
     //x stays unchanged, update y
     updateOdo(odo.getXYT()[0], (LLy+3)*TILE_SIZE-LIGHT_Y_OFFSET);
-    moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
+    moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);*/
     
   }
   
@@ -230,8 +272,9 @@ public class Navigation extends Thread {
   }
 
   public void turnMediumMotor(int angle) {
-    mediumM.setSpeed(50);
+    mediumM.setSpeed(30);
     mediumM.rotate(angle, false);
+    mediumM.stop();
   }
   
   /**
@@ -240,7 +283,7 @@ public class Navigation extends Thread {
    * @param x, the x value to update odo to
    * @param y, the y value to update odo to
    */
-  public void updateOdo(double x, double y) {
+  public void updateOdo(double x, double y, double theta) {
     // Read both sensors once at first
     lightMeanL.fetchSample(lightDataL, 0); // acquire data
     int lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
@@ -279,6 +322,7 @@ public class Navigation extends Thread {
     }
     odo.setX(x);
     odo.setY(y);
+    odo.setTheta(theta);
   }
   
 }
