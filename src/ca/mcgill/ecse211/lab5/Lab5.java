@@ -18,6 +18,7 @@ import lejos.robotics.filter.MeanFilter;
 
 /**
  * Main Class for Lab 5 - ECSE 211 Fall 2018
+ * 
  * @author Eliott Bourachot
  */
 public class Lab5 {
@@ -65,7 +66,7 @@ public class Lab5 {
     Navigation nav = new Navigation(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK, odometer, mediumMotor,
         lightMean1, lightData1, lightMean2, lightData2);
 
- // Display Thread
+    // Display Thread
     Display generalDisplay = new Display(lcd); // No need to change
     Thread displayThread = new Thread(generalDisplay);
     displayThread.start();

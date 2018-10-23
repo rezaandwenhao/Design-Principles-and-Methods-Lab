@@ -1,17 +1,16 @@
-/*
- * Navigation.java
- */
 package ca.mcgill.ecse211.lab5;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import lejos.hardware.Button;
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
 /**
- * This class is used to drive the robot on the demo floor.
+ * This class is used to drive the robot on the demo floor. It contains methods
+ * to drive robot to travel to a certain point or turn to desired angle
+ * 
+ * @author Eliott Bourachot, Wenhao Geng, Eden Ovadia
  */
 public class Navigation extends Thread {
   private static final int FORWARD_SPEED = 150;
@@ -58,23 +57,31 @@ public class Navigation extends Thread {
     int[] settings = {1,1,4,4,0,0}; // LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
     int LLx = settings[0], LLy = settings[1], URx = settings[2], URy = settings[3];
     
-    travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE, false);
+    // travel to the left corner of searching area
+    travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE);
     Button.waitForAnyPress();
-    travelTo((LLx+0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE, false);
+    // travel to the center of the first tile 
+    travelTo((LLx+0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE);
     
-    int height = URy - LLy - 1;
-    int currentY = 0;
-    boolean right = true;
+    /*
+     * We will alternatively perform a set of movements: left side (of the searching
+     * area) to right side (or right side to left side) crossing, move up one tile,
+     * and then rotate the light sensor 180 degrees to the other side of the robot,
+     * until all the intersections within the searching area is checked
+     */
+    int height = URy - LLy - 1; //the total amount of the set of movements need to be done
+    int currentY = 0;  //current counter of the set of movements has been done
+    boolean right = true;   //indicate whether to do left side to right side crossing or the other way
     while (currentY < height) {
       currentY++;
       if (right) {
-        right = false;
+        right = false;  //change to false so the next iteration it will do right side to left side crossing
         turnTo(90);
         //using the first vertical black line to correct odo
         updateOdo((LLx+1)*TILE_SIZE-LIGHT_X_OFFSET, odo.getXYT()[1], 90);
         moveForward((URx-LLx-1)*TILE_SIZE-LIGHT_X_OFFSET, true, FORWARD_SPEED);
-        //x stays unchanged, update y
         turnTo(0);
+        //x stays unchanged, update y
         updateOdo(odo.getXYT()[0], (LLy+currentY)*TILE_SIZE-LIGHT_Y_OFFSET, 0);
         moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
         turnMediumMotor(-180);
@@ -91,7 +98,8 @@ public class Navigation extends Thread {
       }
     }
     
-    travelTo(URx*TILE_SIZE, URy*TILE_SIZE, false);
+    //travel to the upper right corner of the searching area
+    travelTo(URx*TILE_SIZE, URy*TILE_SIZE);
     
   }
   
@@ -106,7 +114,7 @@ public class Navigation extends Thread {
    * @param y in cm
    * @param onlyTurntoDest if true, then only turn to dest but do not move forward
    */
-  public void travelTo(double x, double y, boolean onlyTurntoDest) {
+  public void travelTo(double x, double y) {
 	  
 	  double currentPos[] = odo.getXYT();
 	  
@@ -129,7 +137,6 @@ public class Navigation extends Thread {
 	  turnTo(desiredAngle);
 	  
 	  //move forwards to reach the point x,y.
-	  if(!onlyTurntoDest)
 	    moveForward(hypotenuse, true, FORWARD_SPEED);
   }
   
@@ -214,12 +221,19 @@ public class Navigation extends Thread {
    * 
    * @param radius
    * @param distance
-   * @return
    */
   private static int convertDistance(double radius, double distance) {
     return (int) ((180.0 * distance) / (Math.PI * radius));
   }
 
+  /**
+   * This method allows the conversion of an angle to the total rotation of each wheel need to
+   * turn that angle.
+   * 
+   * @param radius
+   * @param width
+   * @param angle
+   */
   private static int convertAngle(double radius, double width, double angle) {
     return convertDistance(radius, Math.PI * width * angle / 360.0);
   }
@@ -232,6 +246,11 @@ public class Navigation extends Thread {
 	motorR.stop(false);
   }
 
+  /**
+   * turn the medium motor a desired angle with predefined motor speed
+   * 
+   * @param angle
+   */
   public void turnMediumMotor(int angle) {
     mediumM.setSpeed(MEDIUM_MOTOR_SPEED);
     mediumM.rotate(angle, false);
@@ -239,10 +258,12 @@ public class Navigation extends Thread {
   }
   
   /**
-   * use two light sensors to bring the robot to face either perfect horizatonally or vertically
+   * use two light sensors to bring the robot to face either perfect horizatonally
+   * or vertically, and update the odo data
    * 
    * @param x, the x value to update odo to
    * @param y, the y value to update odo to
+   * @param theta, the theta value to update odo to
    */
   public void updateOdo(double x, double y, double theta) {
     // Read both sensors once at first

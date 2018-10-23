@@ -5,17 +5,14 @@ import java.text.DecimalFormat;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.lcd.TextLCD;
-import lejos.robotics.Color;
 
 /**
- * This class is used to display the content of the odometer variables (x, y, Theta)
+ * This class is used to display the content of the odometer variables (x, y, Theta, detected color ring)
  */
 public class Display implements Runnable {
 
   private Odometer odo;
-  private ColorClassifier cc;
   private TextLCD lcd;
-  private float[] colorData;
   private double[] position;
   private final long DISPLAY_PERIOD = 25;
   private long timeout = Long.MAX_VALUE;
@@ -28,7 +25,6 @@ public class Display implements Runnable {
    */
   public Display(TextLCD lcd) throws OdometerExceptions {
     odo = Odometer.getOdometer();
-//    cc = ColorClassifier.getColorClassifier();
     this.lcd = lcd;
   }
 
@@ -40,7 +36,6 @@ public class Display implements Runnable {
    */
   public Display(TextLCD lcd, long timeout) throws OdometerExceptions {
     odo = Odometer.getOdometer();
-//    cc = ColorClassifier.getColorClassifier();
     this.timeout = timeout;
     this.lcd = lcd;
   }
@@ -56,7 +51,7 @@ public class Display implements Runnable {
     do {      
       updateStart = System.currentTimeMillis();
 
-//       Retrieve x, y and Theta information
+      //Retrieve x, y and Theta information
       position = odo.getXYT();
 
       ColorClassifier.Color displayColor = ColorClassifier.detectedColor;
@@ -68,9 +63,6 @@ public class Display implements Runnable {
       lcd.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
       lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2);
       lcd.drawString("Detected: " + displayColor.toString(), 0, 3);
-//	  lcd.drawString("Green: " + ColorClassifier.green*1000, 0, 4);
-//	  lcd.drawString("Blue: " + ColorClassifier.blue*1000, 0, 5);
-//	  lcd.drawString("Detected: " + cc.getDetectedColor(), 0, 6);
 
       // this ensures that the data is updated only once every period
       updateEnd = System.currentTimeMillis();

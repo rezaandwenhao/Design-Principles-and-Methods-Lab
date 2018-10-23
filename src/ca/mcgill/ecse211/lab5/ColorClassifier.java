@@ -1,16 +1,17 @@
 package ca.mcgill.ecse211.lab5;
 
-import ca.mcgill.ecse211.odometer.Odometer;
-import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.Sound;
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.TextLCD;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.Color;
 import lejos.robotics.SampleProvider;
+
+/**
+ * This class is used to detect the color using light sensor ColorID mode
+ * It is always running once the thread is launched
+ * The thread let the robot beep once if a desired color ring is detected, 
+ * and beep twice if other color ring is detected. It does not beep when detect nothing
+ * 
+ * @author Eliott Bourachot
+ * @edits Wenhao Geng, Eden Ovadia
+ */
 
 public class ColorClassifier extends Thread {
 
