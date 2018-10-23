@@ -1,6 +1,7 @@
 // Lab5.java
 package ca.mcgill.ecse211.lab5;
 
+import ca.mcgill.ecse211.lab5.ColorClassifier.Color;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.Button;
@@ -80,62 +81,27 @@ public class Lab5 {
 	ul.start();
       
     while (Button.waitForAnyPress() != Button.ID_ENTER);
-       
+
     // Light Localizer Thread
     ColorSensorLocalization csl = new ColorSensorLocalization(nav, odometer, lightMean1, lightData1, lightMean2, lightData2);
     csl.start();
-   
     
     while (Button.waitForAnyPress() != Button.ID_ENTER);
 
     // Initializing Color Sensor and runs it in this thread
  	@SuppressWarnings("resource") // Because we don't bother to close this resource
-/* 	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
- 	SampleProvider colorSample = colorSensor.getMode("Color ID"); // init RGB mode
+ 	SensorModes colorSensor = new EV3ColorSensor(colorPort); // lightSensor is the instance
+ 	SampleProvider colorSample = colorSensor.getMode("ColorID"); // init RGB mode
  	SampleProvider colorMean = new MeanFilter(colorSample, 5); // use a mean filter to reduce fluctuations
  	float[] colorData = new float[colorSensor.sampleSize()]; // usData is the buffer in which data are returned
-*/   
+   
  	// Color Classifier Thread
- 	ColorClassifier cc = ColorClassifier.getColorClassifier(null, null);
- 	nav.start();
+ 	ColorClassifier cc = new ColorClassifier(colorMean, colorData, Color.orange);
     cc.start();
     
-//    int[] settings = {0,0,0,0,0,0};// LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
-//    int buttonSelect = 0;
-//    int currentSetting = 0;
-//    do {
-//		lcd.clear(); // clear the display
-//		
-//		String[] currentArrow = {"", "", "", "", "", ""};
-//		currentArrow[currentSetting] = "->";
-//		
-//	  	lcd.drawString(currentArrow + "LLx: " + settings[0], 0, 0);
-//	  	lcd.drawString(currentArrow + "LLy: " + settings[1], 0, 1);
-//	  	lcd.drawString(currentArrow + "URx: " + settings[2], 0, 2);
-//	  	lcd.drawString(currentArrow + "URy: " + settings[3], 0, 3);
-//	  	lcd.drawString(currentArrow + "TR: " + settings[4], 0, 4);
-//	  	lcd.drawString(currentArrow + "SC: " + settings[5], 0, 5);
-//	  	lcd.drawString("Press Enter to Exit", 0, 6);
-//	  	
-//	  	buttonSelect = Button.waitForAnyPress(); // Record choice (left or right press)
-//	  	switch (buttonSelect) {
-//	  	case Button.ID_LEFT: 
-//	  		settings[currentSetting]--;
-//	  		break;
-//	  	case Button.ID_RIGHT:
-//	  		settings[currentSetting]++;
-//	  		break;
-//	  	case Button.ID_DOWN:
-//	  		currentSetting = (currentSetting++)%6;
-//	  		break;
-//	  	case Button.ID_UP:
-//	  		currentSetting = (currentSetting--)%6;
-//	  		break;
-//	  	}
-//    } while (buttonSelect != Button.ID_ENTER);
-//    
-//    Search s = new Search(nav, odometer, settings);
-//    s.start();
+    // Navigation Thread
+ 	nav.start();
+
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);

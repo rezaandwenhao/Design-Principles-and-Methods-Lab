@@ -14,98 +14,85 @@ import lejos.robotics.SampleProvider;
 
 public class ColorClassifier extends Thread {
 
-	private static int COLOR_CORRECTION_PERIOD = 100;
-	private static ColorClassifier cc;
-//	private SampleProvider colorProvider;
-//	private float[] colorData;
-	public static String detectedColor;
-	//public static float red, green, blue;
+	public static Color detectedColor;
+	public static enum Color {blue, orange, yellow, green, nothing};
+
+	private static int COLOR_CORRECTION_PERIOD = 10;
+	private SampleProvider colorSampleP;
+	private float[] sampleColor;
+	private Color SC;
+	private static int FILTER = 3;
 	
-	  // initializing color sensor, color sample provider, and an array to hold samples
-	  private static Port colorSensor = LocalEV3.get().getPort("S3");
-	  private static SensorModes mode = new EV3ColorSensor(colorSensor);
-	  private static SampleProvider colorSampleP = mode.getMode("ColorID");
-	  private static float[] sampleColor = new float[mode.sampleSize()];
-	
-	public ColorClassifier(SampleProvider colorMean, float[] colorData) {
-//		this.colorProvider = colorProvider;
-//		this.colorData = colorData;
-		ColorClassifier.detectedColor = null;
+	public ColorClassifier(SampleProvider colorMean, float[] colorData, Color SC) {
+		ColorClassifier.detectedColor = Color.nothing;
+		this.colorSampleP = colorMean;
+		this.sampleColor = colorData;
+		this.SC = SC;
+		
 	}
-	
-	/**
-	   * This class is meant to return the existing Color Classifier Object. It is meant to be used only if an
-	   * Color Classifier object has been created
-	   * @return error if no previous Color Classifier exists
-	   */
-	public synchronized static ColorClassifier getColorClassifier() throws OdometerExceptions {
-	
-	  if (cc == null) {
-	    throw new OdometerExceptions("No previous Color Classifier exits.");
-	  }
-	  return cc;
-	}
-	
-	public synchronized static ColorClassifier getColorClassifier(SampleProvider colorMean, float[] colorData)
-	      throws OdometerExceptions {
-	    if (cc != null) { // Return existing object
-	      return cc;
-	    } else { // create object and return it
-	      cc = new ColorClassifier(colorMean, colorData);
-	      return cc;
-	    }
-	  }	
-	 
 	public void run() {
 	    long updateStart, updateEnd;
-
+	    int numTimesDetected = 0;
+	    Color pastDetectedColor = Color.nothing;
+	    boolean detectionEnabled = false;
+	    long detectedTime = 0;
+	    
 		while(true) {
 		    updateStart = System.currentTimeMillis();
 
 			colorSampleP.fetchSample(sampleColor, 0);
-			
-		   // red = colorData[0];
-		   // System.out.println("red: " + red*1000);
-		   // green = colorData[1]; 
-		   // blue = colorData[2];
+
+			// classifies color
 			if (1.5 < sampleColor[0] && sampleColor[0] < 2.5) {
-			  detectedColor= "blue";
+			  detectedColor = Color.blue;
 			} else if (5.5 < sampleColor[0] && sampleColor[0] < 6.5) {
-			  detectedColor= "green";
+			  detectedColor = Color.green;
 			} else if (2.5 < sampleColor[0] && sampleColor[0] < 3.5) {
-			  detectedColor= "yellow";
+			  detectedColor = Color.yellow;
 			} else if (12.5 < sampleColor[0] && sampleColor[0] < 13.5) {
-              detectedColor= "orange";
+              detectedColor = Color.orange;
 			} else {
-			  detectedColor="Nothing";
+			  detectedColor = Color.nothing;
 			}
-		    /*if (red > green && red > blue) {
-		    	detectedColor = "Red";
-		    } else if (green > red && green > blue) {
-		    	detectedColor = "Green";
-		    } else if (blue > red && blue > green) {
-		    	detectedColor = "Blue";
-		    } else {
-		    	detectedColor = "None";
-		    }*/
-		    
+			
+			// beeps once if detects correct color (more than FILTER times)
+			if (detectedColor == pastDetectedColor && detectedColor != Color.nothing && !detectionEnabled) {
+				if (numTimesDetected > FILTER) {
+					if (detectedColor == SC) {
+						Sound.beep();
+						detectionEnabled = true;
+						detectedTime = System.currentTimeMillis();
+					} else {
+						Sound.twoBeeps();
+						detectionEnabled = true;
+						detectedTime = System.currentTimeMillis();
+					}
+				} else 
+					numTimesDetected ++;
+			} else {
+				numTimesDetected = 0;
+			}
+			
+			// need to wait seconds to reset detection 
+			if (System.currentTimeMillis() - detectedTime > 2000) {
+				detectionEnabled = false;
+			}
+			
+			pastDetectedColor = detectedColor;
+		
 		    // this ensures that the odometer only runs once every period
-		      updateEnd = System.currentTimeMillis();
-		      if (updateEnd - updateStart < COLOR_CORRECTION_PERIOD) {
-		        try {
-		          Thread.sleep(COLOR_CORRECTION_PERIOD - (updateEnd - updateStart));
-		        } catch (InterruptedException e) {
-		          // there is nothing to be done
-		        }
+		    updateEnd = System.currentTimeMillis();
+		    if (updateEnd - updateStart < COLOR_CORRECTION_PERIOD) {
+		      try {
+		        Thread.sleep(COLOR_CORRECTION_PERIOD - (updateEnd - updateStart));
+		      } catch (InterruptedException e) {
+		        // there is nothing to be done
 		      }
+		    }
 		}
 	}	   
 	
-	public float[] getColorData() {
-		return sampleColor;
-	}
-	
-	public String getDetectedColor() {
+	public Color getDetectedColor() {
 		return detectedColor;
 	}
 }

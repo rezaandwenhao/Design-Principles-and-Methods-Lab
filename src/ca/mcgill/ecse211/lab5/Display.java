@@ -58,15 +58,16 @@ public class Display implements Runnable {
 
 //       Retrieve x, y and Theta information
       position = odo.getXYT();
-      // Retrieve red, green, blue information
-//      colorData = cc.getColorData();
+
+      ColorClassifier.Color displayColor = ColorClassifier.detectedColor;
+      if (displayColor == null) displayColor = ColorClassifier.Color.nothing;
       
       // Print x,y, and theta information
       DecimalFormat numberFormat = new DecimalFormat("######0.00");
       lcd.drawString("X: " + numberFormat.format(position[0]), 0, 0);
       lcd.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
       lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2);
-      lcd.drawString("Detected: " + ColorClassifier.detectedColor, 0, 3);
+      lcd.drawString("Detected: " + displayColor.toString(), 0, 3);
 //	  lcd.drawString("Green: " + ColorClassifier.green*1000, 0, 4);
 //	  lcd.drawString("Blue: " + ColorClassifier.blue*1000, 0, 5);
 //	  lcd.drawString("Detected: " + cc.getDetectedColor(), 0, 6);

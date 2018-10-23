@@ -18,8 +18,9 @@ public class Navigation extends Thread {
   private static final int ROTATE_SPEED = 70;
   private static final double TILE_SIZE = 30.48;
   private static final double COLOR_THRESHOLD = 17; // has been changed for Lab 5
-
-  
+  private static final int MEDIUM_MOTOR_SPEED = 30;
+  private static final int CORRECTION_SPEED = 80;
+ 
   private EV3LargeRegulatedMotor motorL;
   private EV3LargeRegulatedMotor motorR;
   private EV3MediumRegulatedMotor mediumM;
@@ -36,7 +37,6 @@ public class Navigation extends Thread {
   private final int LIGHT_Y_OFFSET = 9; // Y offset to account for the light sensor not being in the middle (cm)
   private final int LIGHT_X_OFFSET = 10; // X offset to account for the light sensor not being in the middle (cm)
 
-    
   Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, double leftRadius, double rightRadius,
       double track, Odometer odo, EV3MediumRegulatedMotor mediumM, SampleProvider lightMean1, float[] lightData1,
       SampleProvider lightMean2, float[] lightData2) {
@@ -79,7 +79,6 @@ public class Navigation extends Thread {
         moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
         turnMediumMotor(-180);
         
-         //right
       } else {
         right = true;
         turnTo(-90);
@@ -89,48 +88,10 @@ public class Navigation extends Thread {
         updateOdo(odo.getXYT()[0], (LLy+currentY)*TILE_SIZE-LIGHT_Y_OFFSET, 0);
         moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
         turnMediumMotor(180);
-        
-        //left
       }
     }
     
     travelTo(URx*TILE_SIZE, URy*TILE_SIZE, false);
-    
-    
-    
-/*    travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE, false);
-    Button.waitForAnyPress();
-    travelTo((LLx+0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE, false);
-    //only turn to face the RL corner
-    travelTo((URx-0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE, true);
-    
-    //using the first vertical black line to correct odo
-    updateOdo((LLx+1)*TILE_SIZE-LIGHT_X_OFFSET, (LLy+0.5)*TILE_SIZE);
-    moveForward((URx-LLx-1)*TILE_SIZE-LIGHT_X_OFFSET, true, FORWARD_SPEED);
-    
-    rotate(false, 90, true);
-    //x stays unchanged, update y
-    updateOdo(odo.getXYT()[0], (LLy+1)*TILE_SIZE-LIGHT_Y_OFFSET);
-    moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
-    turnMediumMotor(-180);
-    
-    rotate(false, 90, true);
-    updateOdo((URx-1)*TILE_SIZE+LIGHT_X_OFFSET, odo.getXYT()[1]);
-    moveForward((URx-LLx-1)*TILE_SIZE-LIGHT_X_OFFSET, true, FORWARD_SPEED);
-    
-    rotate(true, 90, true);
-    updateOdo(odo.getXYT()[0], (LLy+2)*TILE_SIZE-LIGHT_Y_OFFSET);
-    moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
-    turnMediumMotor(180);
-    
-    rotate(true, 90, true);
-    updateOdo((LLx+1)*TILE_SIZE-LIGHT_X_OFFSET, odo.getXYT()[1]);
-    moveForward((URx-LLx-1)*TILE_SIZE-LIGHT_X_OFFSET, true, FORWARD_SPEED);
-    
-    rotate(false, 90, true);
-    //x stays unchanged, update y
-    updateOdo(odo.getXYT()[0], (LLy+3)*TILE_SIZE-LIGHT_Y_OFFSET);
-    moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);*/
     
   }
   
@@ -272,7 +233,7 @@ public class Navigation extends Thread {
   }
 
   public void turnMediumMotor(int angle) {
-    mediumM.setSpeed(30);
+    mediumM.setSpeed(MEDIUM_MOTOR_SPEED);
     mediumM.rotate(angle, false);
     mediumM.stop();
   }
@@ -292,32 +253,39 @@ public class Navigation extends Thread {
     int lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
     
     // Move forwards until first sensor hits line
-    moveForward(30, false, 30);
+    moveForward(TILE_SIZE, false, CORRECTION_SPEED);
     while (lightL > COLOR_THRESHOLD && lightR > COLOR_THRESHOLD) { // move forward until you hit a black band
         lightMeanL.fetchSample(lightDataL, 0); // acquire data
         lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
         lightMeanR.fetchSample(lightDataR, 0); // acquire data
         lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
     }
-    Sound.beep();
     stopMotors();
     
     // Move whichever sensor didn't hit line until it hits the line
     if (lightL > COLOR_THRESHOLD) {
-        moveLeftMotor(10, false, 30);
+        moveLeftMotor(3, false, 30);
         while (lightL > COLOR_THRESHOLD) {
             lightMeanL.fetchSample(lightDataL, 0); // acquire data
             lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
         }
-        Sound.beep();
+        moveLeftMotor(-5, false, 30);
+        while (lightL > COLOR_THRESHOLD) {
+            lightMeanL.fetchSample(lightDataL, 0); // acquire data
+            lightL = (int) (lightDataL[0] * 100.0); // extract from buffer, cast to int
+        }
         stopMotors();
     } else if (lightR > COLOR_THRESHOLD) {
-        moveRightMotor(10, false, 30);
+        moveRightMotor(3, false, 30);
         while (lightR > COLOR_THRESHOLD) {
             lightMeanR.fetchSample(lightDataR, 0); // acquire data
             lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
         }
-        Sound.beep();
+        moveRightMotor(-5, false, 30);
+        while (lightR > COLOR_THRESHOLD) {
+            lightMeanR.fetchSample(lightDataR, 0); // acquire data
+            lightR = (int) (lightDataR[0] * 100.0); // extract from buffer, cast to int
+        }
         stopMotors();
     }
     odo.setX(x);
