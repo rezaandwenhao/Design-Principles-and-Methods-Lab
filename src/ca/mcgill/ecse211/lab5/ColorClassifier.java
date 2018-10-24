@@ -49,7 +49,7 @@ public class ColorClassifier extends Thread {
 			  detectedColor = Color.green;
 			} else if (2.5 < sampleColor[0] && sampleColor[0] < 3.5) {
 			  detectedColor = Color.yellow;
-			} else if (12.5 < sampleColor[0] && sampleColor[0] < 13.5) {
+			} else if (-0.5 < sampleColor[0] && sampleColor[0] < 0.5) {
               detectedColor = Color.orange;
 			} else {
 			  detectedColor = Color.nothing;

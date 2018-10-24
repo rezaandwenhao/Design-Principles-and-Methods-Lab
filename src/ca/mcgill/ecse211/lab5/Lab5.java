@@ -30,10 +30,10 @@ public class Lab5 {
   static final EV3MediumRegulatedMotor mediumMotor =
 		  new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
   // Sensors
-  private static final Port usPort = LocalEV3.get().getPort("S1");
+  private static final Port usPort = LocalEV3.get().getPort("S3");
   private static final Port lightLPort = LocalEV3.get().getPort("S4");
   private static final Port lightRPort = LocalEV3.get().getPort("S2");
-  private static final Port colorPort = LocalEV3.get().getPort("S3"); 
+  private static final Port colorPort = LocalEV3.get().getPort("S1"); 
   
   // Robot related parameters
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();

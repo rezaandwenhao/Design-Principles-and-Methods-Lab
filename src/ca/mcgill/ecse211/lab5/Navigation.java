@@ -60,7 +60,7 @@ public class Navigation extends Thread {
     
     travelTo(LLx*TILE_SIZE, LLy*TILE_SIZE, false);
     Button.waitForAnyPress();
-    travelTo((LLx+0.5)*TILE_SIZE, (LLy+0.5)*TILE_SIZE, false);
+    travelTo((LLx+0.6)*TILE_SIZE, (LLy+0.6)*TILE_SIZE, false);
     
     int height = URy - LLy - 1;
     int currentY = 0;
@@ -77,7 +77,7 @@ public class Navigation extends Thread {
         turnTo(0);
         updateOdo(odo.getXYT()[0], (LLy+currentY)*TILE_SIZE-LIGHT_Y_OFFSET, 0);
         moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
-        turnMediumMotor(-180);
+        turnMediumMotor(-120);
         
       } else {
         right = true;
@@ -87,7 +87,7 @@ public class Navigation extends Thread {
         turnTo(0);
         updateOdo(odo.getXYT()[0], (LLy+currentY)*TILE_SIZE-LIGHT_Y_OFFSET, 0);
         moveForward(TILE_SIZE-LIGHT_Y_OFFSET, true, FORWARD_SPEED);
-        turnMediumMotor(180);
+        turnMediumMotor(120);
       }
     }
     
