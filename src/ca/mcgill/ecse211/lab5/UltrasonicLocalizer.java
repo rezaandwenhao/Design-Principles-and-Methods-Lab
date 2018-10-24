@@ -27,6 +27,9 @@ public class UltrasonicLocalizer extends Thread{
 		this.fallingEdge = fallingEdge;
 	}
 	
+	/**
+	 * decides which method to run.
+	 */
 	public void run() {
 		if (this.fallingEdge) {
 			fallingEdge();

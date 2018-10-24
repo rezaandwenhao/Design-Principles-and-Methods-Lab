@@ -103,7 +103,6 @@ public class Lab5 {
     // Navigation Thread
  	nav.start();
 
-    
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
   }

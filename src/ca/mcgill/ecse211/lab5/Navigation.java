@@ -13,12 +13,12 @@ import lejos.robotics.SampleProvider;
  * @author Eliott Bourachot, Wenhao Geng, Eden Ovadia
  */
 public class Navigation extends Thread {
-  private static final int FORWARD_SPEED = 150;
-  private static final int ROTATE_SPEED = 70;
-  private static final double TILE_SIZE = 30.48;
+  private static final int FORWARD_SPEED = 150; // speed of motors when moving forwards
+  private static final int ROTATE_SPEED = 70; // speed of motors when rotating
+  private static final double TILE_SIZE = 30.48; // size of a tile
   private static final double COLOR_THRESHOLD = 17; // has been changed for Lab 5
-  private static final int MEDIUM_MOTOR_SPEED = 30;
-  private static final int CORRECTION_SPEED = 80;
+  private static final int MEDIUM_MOTOR_SPEED = 30; // speed of medium motor
+  private static final int CORRECTION_SPEED = 80; // slower speed so that sensors can detect black lines accurately
  
   private EV3LargeRegulatedMotor motorL;
   private EV3LargeRegulatedMotor motorR;
@@ -52,7 +52,9 @@ public class Navigation extends Thread {
     this.lightDataR = lightData2;
   }
 
-  
+  /**
+   * runs Search and Localize procedure
+   */
   public void run() {
     int[] settings = {1,1,4,4,0,0}; // LLx = 0, LLy = 0, URx = 0, URy = 0, TR = 0, SC = 0;
     int LLx = settings[0], LLy = settings[1], URx = settings[2], URy = settings[3];
